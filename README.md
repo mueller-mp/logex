@@ -47,6 +47,7 @@ Pretrained LoRa weights are also available [here](https://zenodo.org/records/136
 cd AEDG
 mkdir lora_weights # use path to this folder as model_path below
 wget https://zenodo.org/records/13628864/files/pytorch_lora_weights.safetensors
+```
 ### 3. Generate tail samples
 Run the following commands from the AEDG folder (each command generates 100 samples from a tail class). The variables `model_path`and `weight_path` need to be adjusted.
 ```
