@@ -355,7 +355,7 @@ def validate(model, device, loss_fxn, optimizer, data_loader, history, epoch, mo
         best_model_wts_balacc_head_fpr = deepcopy(model.state_dict())
         torch.save({'weights': best_model_wts_balacc_head_fpr, 'optimizer': optimizer.optimizer.state_dict() if optimizer.sam_opt else optimizer.state_dict()}, os.path.join(model_dir, f'chkpt_epoch-{epoch}-balacc-head-fpr.pt'))
     else:
-        print(f'--- EARLY STOPPING: Accuracy-tail has not improved from {round(early_stopping_dict["best_acc_head_fpr"], 3)} ---')
+        print(f'--- EARLY STOPPING: No improvement on head-acc - fpr from {round(early_stopping_dict["best_acc_head_fpr"], 3)} ---')
         early_stopping_dict['epochs_no_improve_head_fpr'] += 1
 
 

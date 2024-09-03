@@ -4,7 +4,10 @@
 
 **University of Tübingen and Tübingen AI Center**
 
-The repository is based on Gregory Holstes [long-tailed chest x-ray classification repo](https://github.com/VITA-Group/LongTailCXR)
+![main-fig.pdf](main-fig.pdf)
+ **LoGex Workflow:** First, an auxiliary classifier is trained on the long-tailed dataset. Then, StableDiffusion is finetuned via LoRa _only_ on the tail samples. The auxiliary classifier and the finetuned diffusion model are used to generate synthetic tail images via guided diffusion. Those samples are then used to augment the tail classes of the real dataset, and a classifier is retrained on this augmented dataset.
+
+The repository is partly based on Gregory Holstes [long-tailed chest x-ray classification repo](https://github.com/VITA-Group/LongTailCXR)
 and the [AEDG repo](https://github.com/M4xim4l/DiG-IN) (previously called DiG-IN).
 ### Setup environments
 For classifier training:
@@ -18,7 +21,12 @@ conda env create -f aedg.yml
 ```
 ### Get the data
 The dataset used in this paper is a subset from [Kriegsmann et al](https://heidata.uni-heidelberg.de/dataset.xhtml?persistentId=doi:10.11588/data/7QCR8S). You can download the full dataset from their [website](https://heidata.uni-heidelberg.de/dataset.xhtml?persistentId=doi:10.11588/data/7QCR8S).
-The synthetic tail data generated with LoGex is available [here](here). Downloading it directly allows you to jump to step 4 without fine-tuning stable diffusion and generating the tail samples yourself.
+The synthetic tail data generated with LoGex is available [here](https://zenodo.org/records/13386825/files/syn_tail_images.tar.gz). Downloading it directly allows you to jump to step 4 without fine-tuning stable diffusion and generating the tail samples yourself:
+```
+cd AEDG # data should be located in the AEDG folder
+wget https://zenodo.org/records/13386825/files/syn_tail_images.tar.gz
+tar -xvf syn_tail_images.tar.gz
+```
 ### 1. Train auxiliary classifier
 Different choices are possible for the auxiliary classifier:
 ```
@@ -34,8 +42,13 @@ python src/main.py --data_dir /path/to/skincancer/data --out_dir output --datase
 We used ldam+cb+drw for the numbers in the paper.
 ### 2. LoRA finetuning on tail
 Finetune stable diffusion 1.4 via the diffusers library like explained [here](https://github.com/huggingface/diffusers/tree/main/examples/text_to_image).
+Pretrained LoRa weights are also available [here](https://zenodo.org/records/13628864/files/pytorch_lora_weights.safetensors). Note that they differ slightly from the ones used for the experiments in the paper, so minor deviations are expected, but results should be similar. 
+```
+cd AEDG
+mkdir lora_weights # use path to this folder as model_path below
+wget https://zenodo.org/records/13628864/files/pytorch_lora_weights.safetensors
 ### 3. Generate tail samples
-Move to the AEDG folder and run the following commands (each command generates 100 samples from a tail class).
+Run the following commands from the AEDG folder (each command generates 100 samples from a tail class). The variables `model_path`and `weight_path` need to be adjusted.
 ```
 python src/cxr_classifier_conf.py gpu=0 loss=conf target_neurons=[674] target_classes=[0] sgd_steps=20 optim=adam sgd_stepsize=0.01 sgd_schedule=none latent_lr_factor=0.1 optimize_latents=True optimize_conditioning=True optimize_uncond=True loss_steps=3 loss_steps_schedule=linear per_timestep_conditioning=True per_timestep_uncond=True augmentation_num_cutouts=16 augmentation_noise_sd=0.005 augmentation_noise_schedule=const regularizers=[latent_background_l2,px_background_l2,px_background_lpips] regularizers_ws=[25.0,250.0,25.0] segmentation_squash=sqrt_0.3 prompt="A histopathological slide from a patient with dermis" num_images=100 results_folder="skincancer_similar_pil_guided_class_specific_selectmaxconf_val" early_stopping_confidence=0.4 model_path=/path/to/lora/weights weight_path=/path/to/auxiliary/classifier/weights
 python src/cxr_classifier_conf.py gpu=0 loss=conf target_neurons=[674] target_classes=[1] sgd_steps=20 optim=adam sgd_stepsize=0.01 sgd_schedule=none latent_lr_factor=0.1 optimize_latents=True optimize_conditioning=True optimize_uncond=True loss_steps=3 loss_steps_schedule=linear per_timestep_conditioning=True per_timestep_uncond=True augmentation_num_cutouts=16 augmentation_noise_sd=0.005 augmentation_noise_schedule=const regularizers=[latent_background_l2,px_background_l2,px_background_lpips] regularizers_ws=[25.0,250.0,25.0] segmentation_squash=sqrt_0.3 prompt="A histopathological slide from a patient with epidermis" num_images=100 results_folder="skincancer_similar_pil_guided_class_specific_selectmaxconf_val" early_stopping_confidence=0.4 model_path=/path/to/lora/weights weight_path=/path/to/auxiliary/classifier/weights

@@ -1,4 +1,4 @@
-name: ppdg
+name: aedg
 channels:
   - pytorch
   - nvidia

@@ -1,4 +1,4 @@
-name: lt_cxr
+name: logex
 channels:
   - pytorch
   - conda-forge

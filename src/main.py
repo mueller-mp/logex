@@ -170,7 +170,6 @@ def main(args):
     if args.decoupling_method != 'tau_norm':
         epoch = 1
         early_stopping_dict = {'best_acc': 0., 'epochs_no_improve': 0, 'best_auroc_ood':0., 'epochs_no_improve_auroc':0, 'best_acc_head': 0.,'best_acc_tail': 0., 'best_fpr_ood':1.,'best_acc_head_fpr':-2,'epochs_no_improve_fpr':0,'epochs_no_improve_head':0, 'epochs_no_improve_head_fpr':0.}
-        # best_model_wts_auroc, best_model_wts_balacc, best_model_wts_balacc_head, best_model_wts_balacc_head_fpr, best_model_wts_fpr = None, None, None, None, None
         best_model_wts_balacc_head_fpr = None
         while epoch <= args.max_epochs and (args.no_es or (early_stopping_dict['epochs_no_improve_auroc' if False else 'epochs_no_improve'] <= args.patience)):
             if args.use_hol_new:
@@ -179,10 +178,8 @@ def main(args):
                 history = train(model=model, device=device, loss_fxn=loss_fxn, optimizer=optimizer, data_loader=train_loader, history=history, epoch=epoch, model_dir=model_dir, classes=train_dataset.CLASSES, mixup=args.mixup, mixup_alpha=args.mixup_alpha, ood_loader=ood_loader, id_classes=id_classes_train, ood_classes=ood_classes_train, dummy_oe=False)
             # validation
             history, early_stopping_dict, best_model_wts_balacc_head_fpr= validate(model=model, device=device, loss_fxn=loss_fxn, optimizer=optimizer, data_loader=val_loader, history=history, epoch=epoch, model_dir=model_dir, early_stopping_dict=early_stopping_dict, best_model_wts_balacc_head_fpr=best_model_wts_balacc_head_fpr, classes=val_dataset.CLASSES, id_classes=id_classes, ood_classes=ood_classes, stop_auroc=False, dreamood=False, convert_head=False)
-            # history, early_stopping_dict, best_model_wts_balacc_head_fpr= validate(model=model, device=device, loss_fxn=loss_fxn, optimizer=optimizer, data_loader=val_loader, history=history, epoch=epoch, model_dir=model_dir, early_stopping_dict=early_stopping_dict, best_model_wts_auroc=best_model_wts_auroc, best_model_wts_balacc=best_model_wts_balacc, best_model_wts_balacc_head=best_model_wts_balacc_head, best_model_wts_balacc_head_fpr=best_model_wts_balacc_head_fpr, best_model_wts_fpr=best_model_wts_fpr, classes=val_dataset.CLASSES, id_classes=id_classes, ood_classes=ood_classes, stop_auroc=False, dreamood=False, convert_head=False)
             # log test performance 
             history= validate(model=model, device=device, loss_fxn=loss_fxn, optimizer=optimizer, data_loader=bal_test_loader, history=history, epoch=epoch, model_dir=model_dir, early_stopping_dict=early_stopping_dict, best_model_wts_balacc_head_fpr=best_model_wts_balacc_head_fpr, classes=val_dataset.CLASSES, id_classes=id_classes, ood_classes=ood_classes, stop_auroc=False, only_log_test=True, dreamood=False, convert_head=False)
-            # history= validate(model=model, device=device, loss_fxn=loss_fxn, optimizer=optimizer, data_loader=bal_test_loader, history=history, epoch=epoch, model_dir=model_dir, early_stopping_dict=early_stopping_dict, best_model_wts_auroc=best_model_wts_auroc, best_model_wts_balacc=best_model_wts_balacc, best_model_wts_balacc_head=best_model_wts_balacc_head, best_model_wts_balacc_head_fpr=best_model_wts_balacc_head_fpr, best_model_wts_fpr=best_model_wts_fpr, classes=val_dataset.CLASSES, id_classes=id_classes, ood_classes=ood_classes, stop_auroc=False, only_log_test=True, dreamood=False, convert_head=False)
             if args.drw and epoch == 10:
                 for g in optimizer.param_groups:
                     g['lr'] *= 0.1  # anneal LR
@@ -195,43 +192,10 @@ def main(args):
 
             epoch += 1
     else:
-        # best_model_wts_auroc= best_model_wts_balacc= best_model_wts_balacc_head= best_model_wts_balacc_head_fpr= best_model_wts_fpr = model.state_dict()
         best_model_wts_balacc_head_fpr= model.state_dict()
     # save final weights
     final_model_wts = model.state_dict()
     torch.save({'weights': final_model_wts, 'optimizer': optimizer.optimizer.state_dict() if optimizer.sam_opt else optimizer.state_dict()}, os.path.join(model_dir, f'final-wts-{epoch}.pt'))
-    
-    # if best_model_wts_auroc is not None:
-    #     # auroc weights
-    #     evaluate(model=model, device=device, loss_fxn=loss_fxn, dataset=bal_test_dataset, split='balanced-test', batch_size=args.batch_size, history=history, model_dir=model_dir, weights=best_model_wts_auroc, id_classes=id_classes, ood_classes=ood_classes,save_postfix='valSelectedAuroc', dreamood=False, convert_head=False)
-    #     # Evaluate on imbalanced test set
-    #     evaluate(model=model, device=device, loss_fxn=loss_fxn, dataset=test_dataset, split='test', batch_size=args.batch_size, history=history, model_dir=model_dir, weights=best_model_wts_auroc, id_classes=id_classes, ood_classes=ood_classes,save_postfix='valSelectedAuroc', dreamood=False, convert_head=False)
-    #     # Evaluate on balanced val set
-    #     evaluate(model=model, device=device, loss_fxn=loss_fxn, dataset=val_dataset, split='val-10-100-noaug', batch_size=args.batch_size, history=history, model_dir=model_dir, weights=best_model_wts_auroc, id_classes=id_classes, ood_classes=ood_classes,save_postfix='valSelectedAuroc', dreamood=False, convert_head=False)
-    
-    # if best_model_wts_fpr is not None:
-    #     # fpr weights
-    #     evaluate(model=model, device=device, loss_fxn=loss_fxn, dataset=bal_test_dataset, split='balanced-test', batch_size=args.batch_size, history=history, model_dir=model_dir, weights=best_model_wts_fpr, id_classes=id_classes, ood_classes=ood_classes,save_postfix='valSelectedfpr', dreamood=False, convert_head=False)
-    #     # Evaluate on imbalanced test set
-    #     evaluate(model=model, device=device, loss_fxn=loss_fxn, dataset=test_dataset, split='test', batch_size=args.batch_size, history=history, model_dir=model_dir, weights=best_model_wts_fpr, id_classes=id_classes, ood_classes=ood_classes,save_postfix='valSelectedfpr', dreamood=False, convert_head=False)
-    #     # Evaluate on balanced val set
-    #     evaluate(model=model, device=device, loss_fxn=loss_fxn, dataset=val_dataset, split='val-10-100-noaug', batch_size=args.batch_size, history=history, model_dir=model_dir, weights=best_model_wts_fpr, id_classes=id_classes, ood_classes=ood_classes,save_postfix='valSelectedfpr', dreamood=False, convert_head=False)
-    
-    # if best_model_wts_balacc is not None:
-    #     # balacc weights
-    #     evaluate(model=model, device=device, loss_fxn=loss_fxn, dataset=bal_test_dataset, split='balanced-test', batch_size=args.batch_size, history=history, model_dir=model_dir, weights=best_model_wts_balacc, id_classes=id_classes, ood_classes=ood_classes,save_postfix='valSelectedBalacc', dreamood=False, convert_head=False)
-    #     # Evaluate on imbalanced test set
-    #     evaluate(model=model, device=device, loss_fxn=loss_fxn, dataset=test_dataset, split='test', batch_size=args.batch_size, history=history, model_dir=model_dir, weights=best_model_wts_balacc, id_classes=id_classes, ood_classes=ood_classes,save_postfix='valSelectedBalacc', dreamood=False, convert_head=False)
-    #     # Evaluate on balanced val set
-    #     evaluate(model=model, device=device, loss_fxn=loss_fxn, dataset=val_dataset, split='val-10-100-noaug', batch_size=args.batch_size, history=history, model_dir=model_dir, weights=best_model_wts_balacc, id_classes=id_classes, ood_classes=ood_classes,save_postfix='valSelectedBalacc', dreamood=False, convert_head=False)
-    
-    # if best_model_wts_balacc_head is not None:
-    #     # balacc weights head
-    #     evaluate(model=model, device=device, loss_fxn=loss_fxn, dataset=bal_test_dataset, split='balanced-test', batch_size=args.batch_size, history=history, model_dir=model_dir, weights=best_model_wts_balacc_head, id_classes=id_classes, ood_classes=ood_classes,save_postfix='valSelectedBalaccHead', dreamood=False, convert_head=False)
-    #     # Evaluate on imbalanced test set
-    #     evaluate(model=model, device=device, loss_fxn=loss_fxn, dataset=test_dataset, split='test', batch_size=args.batch_size, history=history, model_dir=model_dir, weights=best_model_wts_balacc_head, id_classes=id_classes, ood_classes=ood_classes,save_postfix='valSelectedBalaccHead', dreamood=False, convert_head=False)
-    #     # Evaluate on balanced val set
-    #     evaluate(model=model, device=device, loss_fxn=loss_fxn, dataset=val_dataset, split='val-10-100-noaug', batch_size=args.batch_size, history=history, model_dir=model_dir, weights=best_model_wts_balacc_head, id_classes=id_classes, ood_classes=ood_classes,save_postfix='valSelectedBalaccHead', dreamood=False, convert_head=False)
     
     if best_model_wts_balacc_head_fpr is not None:
         # balacc weights tail
