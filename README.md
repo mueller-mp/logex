@@ -4,8 +4,8 @@
 
 **University of Tübingen and Tübingen AI Center**
 
-![main-fig.pdf](main-fig.pdf)
- **LoGex Workflow:** First, an auxiliary classifier is trained on the long-tailed dataset. Then, StableDiffusion is finetuned via LoRa _only_ on the tail samples. The auxiliary classifier and the finetuned diffusion model are used to generate synthetic tail images via guided diffusion. Those samples are then used to augment the tail classes of the real dataset, and a classifier is retrained on this augmented dataset.
+![main-fig.png](main-fig.png)
+ **LoGex Workflow:** First, an auxiliary classifier is trained on the long-tailed dataset. Then, StableDiffusion is finetuned via LoRa _only_ on the tail samples. The auxiliary classifier and the finetuned diffusion model are used to generate synthetic tail images via guided diffusion. Those samples are then used to augment the tail classes of the real dataset, and a classifier is retrained on this augmented dataset. This improves the tail detection performance over existing methods and simultaneously achieves high classification accuracy on the head classes.
 
 The repository is partly based on Gregory Holstes [long-tailed chest x-ray classification repo](https://github.com/VITA-Group/LongTailCXR)
 and the [AEDG repo](https://github.com/M4xim4l/DiG-IN) (previously called DiG-IN).

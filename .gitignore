@@ -3,5 +3,5 @@
 *.pt
 AEDG/syn_tail_images
 *.tar*
-!main-fig.pdf
+!main-fig.png
 
