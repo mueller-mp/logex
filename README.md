@@ -1,4 +1,4 @@
-## [LoGex: Improved tail detection of extremely rare histopathology classes via guided diffusion](link-to-come)
+## [LoGex: Improved tail detection of extremely rare histopathology classes via guided diffusion](https://arxiv.org/abs/2409.01317)
 
 **Maximilian Müller and Matthias Hein**
 
@@ -70,3 +70,15 @@ python src/cxr_classifier_conf.py gpu=4 loss=conf target_neurons=[674] target_cl
 CUDA_VISIBLE_DEVICES=3 python src/main.py --data_dir /path/to/skincancer/data --out_dir output --dataset Skin_dataset_similar_PIL_real_and_syn_targeted_maxconf_100 --loss ce --max_epochs 60 --patience 15 --batch_size 128 --lr 1e-4  --seed 1 --no_es --optim adamw --lrScheduler cosine --minLR 1e-5
 ```
 ### Citations
+## Reference
+
+```bibtex
+@inproceedings{mueller2024logex,
+  title     = {LoGex: Improved Tail Detection of Extremely Rare Histopathology Classes via Guided Diffusion},
+  author    = {Müller, Maximilian and Hein, Matthias},
+  booktitle = {Proceedings of the MICCAI 2024 Workshop on Advancing Data Solutions in Medical Imaging AI (ADSMI)},
+  year      = {2024},
+  url       = {https://arxiv.org/abs/2409.01317}
+}
+
+
